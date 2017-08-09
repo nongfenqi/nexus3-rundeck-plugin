@@ -1,6 +1,6 @@
 # Nexus3 Rundeck plugin
 
-<https://github.com/rundeck/nexus-rundeck-plugin>
+<https://github.com/nongfenqi/nexus3-rundeck-plugin>
 
 
 ## Usage
