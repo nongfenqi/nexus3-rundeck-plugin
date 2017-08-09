@@ -1,0 +1,40 @@
+group 'com.nongfenqi.nexus.plugin'
+version '1.0.0-SNAPSHOT'
+
+
+apply plugin: 'java'
+sourceCompatibility = 1.8
+
+apply plugin: 'osgi'
+apply plugin: 'com.github.lburgazzoli.karaf'
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.0.47"
+    }
+}
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly group: 'org.sonatype.nexus', name: 'nexus-plugin-api', version: '3.5.0-02'
+    compileOnly group: 'org.sonatype.nexus', name: 'nexus-repository', version: '3.5.0-02'
+    compileOnly group: 'org.sonatype.nexus', name: 'nexus-rest', version: '3.5.0-02'
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.18'
+}
+
+jar {
+    manifest { // the manifest of the default jar is of type OsgiManifest
+        name = project.name
+        instruction 'Bundle-Vendor', 'nongfenqi'
+        instruction 'Bundle-Description', 'Platform2: Metrics 2 Measures Framework'
+        instruction 'Bundle-DocURL', 'http://www.nongfenqi.com'
+    }
+}
