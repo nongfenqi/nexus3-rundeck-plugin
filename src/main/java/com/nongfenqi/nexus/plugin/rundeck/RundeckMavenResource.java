@@ -101,7 +101,7 @@ public class RundeckMavenResource extends ComponentSupport implements Resource {
     @Path("version")
     @Produces(APPLICATION_JSON)
     public List<RundeckXO> version(
-            @DefaultValue("10") @QueryParam("step") int limit,
+            @DefaultValue("10") @QueryParam("l") int limit,
             @QueryParam("r") String repository,
             @QueryParam("g") String groupId,
             @QueryParam("a") String artifactId,
@@ -115,7 +115,7 @@ public class RundeckMavenResource extends ComponentSupport implements Resource {
         query.filter(termQuery("format", "maven2"));
 
         if (!isBlank(repository)) {
-            query.filter(termQuery("repository_name", groupId));
+            query.filter(termQuery("repository_name", repository));
         }
         if (!isBlank(groupId)) {
             query.filter(termQuery("attributes.maven2.groupId", groupId));
