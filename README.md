@@ -23,6 +23,8 @@ The plugin provides the following new HTTP resources :
   - `a` : artifactId of the artifacts to match
   - `v` : artifact version
   
+  
+  
       wget "http://NEXUS_HOST/service/siesta/rundeck/maven/options/content?r=reponame&g=${option.groupId}&a=${option.artifactId}&v=${option.version}" --content-disposition
 
 
