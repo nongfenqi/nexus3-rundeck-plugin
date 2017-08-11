@@ -20,3 +20,7 @@ The plugin provides the following new HTTP resources :
 
 - Java 1.8
 - run "./gradlew jar"
+
+
+## How to install
+
