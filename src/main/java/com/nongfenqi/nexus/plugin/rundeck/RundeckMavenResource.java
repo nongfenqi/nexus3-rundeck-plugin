@@ -40,6 +40,8 @@ public class RundeckMavenResource extends ComponentSupport implements Resource {
     private final SearchService searchService;
     private final RepositoryManager repositoryManager;
 
+    private static final Response NOT_FOUND = Response.status(404).build();
+
 
     @Inject
     public RundeckMavenResource(
@@ -59,36 +61,40 @@ public class RundeckMavenResource extends ComponentSupport implements Resource {
             @QueryParam("v") String version
     ) {
         if (isBlank(repositoryName) || isBlank(groupId) || isBlank(artifactId) || isBlank(version)) {
-            return Response.status(404).build();
+            return NOT_FOUND;
         }
 
         Repository repository = repositoryManager.get(repositoryName);
         if (null == repository || !repository.getFormat().getValue().equals("maven2")) {
-            return Response.status(404).build();
+            return NOT_FOUND;
         }
 
         StorageFacet facet = repository.facet(StorageFacet.class);
         Supplier<StorageTx> storageTxSupplier = facet.txSupplier();
-        log.info("rundeck download repository: {}", repository);
+
+        log.debug("rundeck download repository: {}", repository);
         final StorageTx tx = storageTxSupplier.get();
         tx.begin();
         Bucket bucket = tx.findBucket(repository);
-        log.info("rundeck download bucket: {}", bucket);
+        log.debug("rundeck download bucket: {}", bucket);
+
+        if (null == bucket) {
+            return commitAndReturn(NOT_FOUND, tx);
+        }
 
         String path = groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + ".jar";
         Asset asset = tx.findAssetWithProperty("name", path, bucket);
-        log.info("rundeck download asset: {}", asset);
-        if (null != asset) {
-            asset.markAsDownloaded();
-            tx.saveAsset(asset);
-            Blob blob = tx.requireBlob(asset.requireBlobRef());
-            tx.commit();
-            Response.ResponseBuilder ok = Response.ok(blob.getInputStream());
-            ok.header("Content-Type", blob.getHeaders().get("BlobStore.content-type"));
-            ok.header("Content-Disposition", "attachment;filename=\"" + path.substring(path.lastIndexOf("/")) + "\"");
-            return ok.build();
+        log.debug("rundeck download asset: {}", asset);
+        if (null == asset) {
+            return commitAndReturn(NOT_FOUND, tx);
         }
-        return Response.status(404).build();
+        asset.markAsDownloaded();
+        tx.saveAsset(asset);
+        Blob blob = tx.requireBlob(asset.requireBlobRef());
+        Response.ResponseBuilder ok = Response.ok(blob.getInputStream());
+        ok.header("Content-Type", blob.getHeaders().get("BlobStore.content-type"));
+        ok.header("Content-Disposition", "attachment;filename=\"" + path.substring(path.lastIndexOf("/")) + "\"");
+        return commitAndReturn(ok.build(), tx);
     }
 
     @GET
@@ -148,6 +154,13 @@ public class RundeckMavenResource extends ComponentSupport implements Resource {
         String lastModifiedTime = DateUtils.formatDate(new Date(lastModified), "yyyy-MM-dd HH:mm:ss");
 
         return RundeckXO.builder().name(version + " (" + lastModifiedTime + ")").value(version).build();
+    }
+
+    private Response commitAndReturn(Response response, StorageTx tx) {
+        if (tx.isActive()) {
+            tx.commit();
+        }
+        return response;
     }
 
 }
