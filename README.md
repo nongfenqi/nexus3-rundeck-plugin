@@ -4,12 +4,13 @@
 
 ## How to install
 
-* add file: `NEXUS_HOME/nexus/system/com/nongfenqi/nexus/plugin/{version}/nexus3-rundeck-plugin-{version}.jar`
 
-* `NEXUS_HOME/nexus/etc/karaf/profile.cfg` append config  `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/version = mvvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/version`
-* `NEXUS_HOME/nexus/etc/karaf/startup.properties ` append config `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/version = mvvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/version`
+* add file: `NEXUS_HOME/nexus/system/com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar`
 
-* restart nexus
+* `NEXUS_HOME/nexus/etc/karaf/profile.cfg` append config  `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version} = mvvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version}`
+* `NEXUS_HOME/nexus/etc/karaf/startup.properties ` append config `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version} = mvvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version}`
+
+* restart nexus3
 
 ## Usage
 
