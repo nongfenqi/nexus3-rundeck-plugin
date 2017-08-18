@@ -8,7 +8,7 @@
 * add file: `NEXUS_HOME/nexus/system/com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar`
 
 * `NEXUS_HOME/nexus/etc/karaf/profile.cfg` append config  `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version} = mvvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version}`
-* `NEXUS_HOME/nexus/etc/karaf/startup.properties ` append config `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version} = mvvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version}`
+* `NEXUS_HOME/nexus/etc/karaf/startup.properties ` append config `reference\:file\:com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar = 200`
 
 * restart nexus3
 
