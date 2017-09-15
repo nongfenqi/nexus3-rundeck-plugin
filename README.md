@@ -15,7 +15,7 @@
 ## Usage
 
 If you installed and the bundle is activeed, like this.
- 
+
 ![](./doc/image/bundle-activeed.jpeg)
 
 Now you can add url options from the nexus3 to rundeck.
@@ -36,8 +36,8 @@ The plugin provides the following new HTTP resources :
   - `p` : packaging of the artifacts to match ('jar', 'war', etc)
   - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
   - `l` : limit - max number of results to return (default 10)
-  
-- `http://NEXUS_HOST/service/siesta/rundeck/maven/options/content` : return artifact stream 
+
+- `http://NEXUS_HOST/service/siesta/rundeck/maven/options/content` : return artifact stream
   Parameters (all required) :
   - `r` : repository ID to search in (null for searching in all indexed repositories)
   - `g` : groupId of the artifacts to match
@@ -47,20 +47,34 @@ The plugin provides the following new HTTP resources :
 Note that if you want to retrieve the artifact from your Rundeck script, you can use content api, example is:
 
     wget "http://NEXUS_HOST/service/siesta/rundeck/maven/options/content?r=reponame&g=${option.groupId}&a=${option.artifactId}&v=${option.version}" --content-disposition
-  
+
 ### Docker repository
+
+The following script allows you to run a Docker with Nexus 3 with nexus3-rundeck-plugin installed.
+
+- ./run_docker.sh
+
+The script build the plugin using a Docker image, as is explained in [Using a Docker](using-a-docker) section.
+Using the compiled jar will build the Dockerfile and run a container with Nexus 3 with nexus3-rundeck-plugin installed.
 
 Welcome to contribute
 
 ### Npm repository
-  
+
 Welcome to contribute
 
 
 ## How to build
 
+### Standard build
+
 - Java 1.8
 - run "./gradlew jar"
 
+### Using a Docker
 
+You can build the plugin easily using a Docker image. With this method is not needed to install a local Gradle environment.
 
+- docker run -it --rm --name nexus3-rundeck-plugin -v "$PWD" -w /tmp/nexus3-rundeck-plugin springyboing/docker-gradlew "./gradlew jar"
+
+This command run a build inside a Docker image (springyboing/docker-gradlew), with gradlew environment ready.
