@@ -81,5 +81,5 @@ The following script allows you to run a Docker with Nexus 3 with nexus3-rundeck
 
 Nexus 3 will be running on http://localhost:8081/
 
-The script build the plugin using a Docker image, as is explained in [Using a Docker](using-a-docker) section.
+The script build the plugin using a Docker image, as is explained in [Using a Docker](#using-a-docker) section.
 Using the compiled jar will build the Dockerfile and run a container with Nexus 3 with nexus3-rundeck-plugin installed.
