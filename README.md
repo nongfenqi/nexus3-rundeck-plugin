@@ -75,6 +75,6 @@ Welcome to contribute
 
 You can build the plugin easily using a Docker image. With this method is not needed to install a local Gradle environment.
 
-- docker run -it --rm --name nexus3-rundeck-plugin -v "$PWD" -w /tmp/nexus3-rundeck-plugin springyboing/docker-gradlew "./gradlew jar"
+- docker run -it --rm --name nexus3-rundeck-plugin -v "$PWD":/tmp/nexus3-rundeck-plugin -w /tmp/nexus3-rundeck-plugin springyboing/docker-gradlew ./gradlew jar
 
 This command run a build inside a Docker image (springyboing/docker-gradlew), with gradlew environment ready.
