@@ -12,7 +12,7 @@ CMD ["bin/nexus", "stop"]
 # Copy and Configure Nexus Rundeck Plugin
 RUN mkdir -p system/com/nongfenqi/nexus/plugin/${RUNDECK_PLUGIN_VERSION}
 
-ADD nexus3-rundeck-plugin-${RUNDECK_PLUGIN_VERSION}.jar \
+ADD build/libs/nexus3-rundeck-plugin-${RUNDECK_PLUGIN_VERSION}.jar \
     system/com/nongfenqi/nexus/plugin/${RUNDECK_PLUGIN_VERSION}/nexus3-rundeck-plugin-${RUNDECK_PLUGIN_VERSION}.jar
 
 RUN echo "bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/"${RUNDECK_PLUGIN_VERSION}" = mvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/"${RUNDECK_PLUGIN_VERSION} \
