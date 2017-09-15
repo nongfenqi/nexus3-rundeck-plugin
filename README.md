@@ -50,16 +50,6 @@ Note that if you want to retrieve the artifact from your Rundeck script, you can
 
 ### Docker repository
 
-The following script allows you to run a Docker with Nexus 3 with nexus3-rundeck-plugin installed.
-
--  chmod 700 run_docker.sh
-- ./run_docker.sh
-
-Nexus 3 will be running on http://localhost:8081/
-
-The script build the plugin using a Docker image, as is explained in [Using a Docker](using-a-docker) section.
-Using the compiled jar will build the Dockerfile and run a container with Nexus 3 with nexus3-rundeck-plugin installed.
-
 Welcome to contribute
 
 ### Npm repository
@@ -81,3 +71,15 @@ You can build the plugin easily using a Docker image. With this method is not ne
 - docker run -it --rm --name nexus3-rundeck-plugin -v "$PWD":/tmp/nexus3-rundeck-plugin -w /tmp/nexus3-rundeck-plugin springyboing/docker-gradlew ./gradlew jar
 
 This command run a build inside a Docker image (springyboing/docker-gradlew), with gradlew environment ready.
+
+## Run in Docker
+
+The following script allows you to run a Docker with Nexus 3 with nexus3-rundeck-plugin installed.
+
+-  chmod 700 run_docker.sh
+- ./run_docker.sh
+
+Nexus 3 will be running on http://localhost:8081/
+
+The script build the plugin using a Docker image, as is explained in [Using a Docker](using-a-docker) section.
+Using the compiled jar will build the Dockerfile and run a container with Nexus 3 with nexus3-rundeck-plugin installed.
