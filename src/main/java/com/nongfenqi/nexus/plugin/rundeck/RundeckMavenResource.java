@@ -78,7 +78,9 @@ public class RundeckMavenResource
             @QueryParam("r") String repositoryName,
             @QueryParam("g") String groupId,
             @QueryParam("a") String artifactId,
-            @QueryParam("v") String version
+            @QueryParam("v") String version,
+            @QueryParam("c") String classifier,
+            @QueryParam("p") String extension
     ) {
         if (isBlank(repositoryName) || isBlank(groupId) || isBlank(artifactId) || isBlank(version)) {
             return NOT_FOUND;
@@ -102,7 +104,24 @@ public class RundeckMavenResource
             return commitAndReturn(NOT_FOUND, tx);
         }
 
-        String path = groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + ".jar";
+        if ("LATEST".equals(version)) {
+            List<RundeckXO> latestVersion = version(1, repositoryName, groupId, artifactId, classifier, extension);
+            if(latestVersion.isEmpty()){
+                return NOT_FOUND;
+            } else {
+                version = latestVersion.get(0).getValue();
+            }
+        }
+
+        if(isBlank(extension)){
+            extension = "jar";
+        }
+
+        if(!isBlank(classifier)){
+            classifier = "-" + classifier;
+        }
+
+        String path = groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + classifier + "." + extension;
         Asset asset = tx.findAssetWithProperty("name", path, bucket);
         log.debug("rundeck download asset: {}", asset);
         if (null == asset) {
