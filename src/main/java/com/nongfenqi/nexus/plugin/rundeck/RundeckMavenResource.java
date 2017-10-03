@@ -168,9 +168,11 @@ public class RundeckMavenResource
         List<Map<String, Object>> assets = (List<Map<String, Object>>) hit.getSource().get("assets");
         Map<String, Object> attributes = (Map<String, Object>) assets.get(0).get("attributes");
         Map<String, Object> content = (Map<String, Object>) attributes.get("content");
-        long lastModified = (long) content.get("last_modified");
-
-        String lastModifiedTime = DateUtils.formatDate(new Date(lastModified), "yyyy-MM-dd HH:mm:ss");
+        String lastModifiedTime = "null";
+        if (content != null && content.containsKey("last_modified")){
+            Long lastModified = (Long) content.get("last_modified");
+            lastModifiedTime = DateUtils.formatDate(new Date(lastModified), "yyyy-MM-dd HH:mm:ss");
+        }
 
         return RundeckXO.builder().name(version + " (" + lastModifiedTime + ")").value(version).build();
     }
