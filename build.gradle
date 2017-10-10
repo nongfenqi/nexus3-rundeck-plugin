@@ -1,5 +1,5 @@
 group 'com.nongfenqi.nexus.plugin'
-version '1.0.0-SNAPSHOT'
+version '1.0.1'
 
 
 apply plugin: 'java'
