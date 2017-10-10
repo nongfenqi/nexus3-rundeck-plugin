@@ -35,14 +35,17 @@ The plugin provides the following new HTTP resources :
   - `a` : artifactId of the artifacts to match
   - `p` : packaging of the artifacts to match ('jar', 'war', etc)
   - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
-  - `l` : limit - max number of results to return (default 10)
+  - `l` : limit - max number of results to return, default value is 10
 
 - `http://NEXUS_HOST/service/siesta/rundeck/maven/options/content` : return artifact stream
   Parameters (all required) :
   - `r` : repository ID to search in (null for searching in all indexed repositories)
   - `g` : groupId of the artifacts to match
   - `a` : artifactId of the artifacts to match
-  - `v` : artifact version
+  - `v` : artifact version, default value is latest version
+  - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
+  - `p` : packaging of the artifacts to match ('jar', 'war', etc), default value is jar
+
 
 Note that if you want to retrieve the artifact from your Rundeck script, you can use content api, example is:
 

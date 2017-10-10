@@ -53,9 +53,8 @@ import static org.sonatype.nexus.common.text.Strings2.isBlank;
 @Singleton
 @Path("/rundeck/maven/options")
 public class RundeckMavenResource
-    extends ComponentSupport
-    implements Resource
-{
+        extends ComponentSupport
+        implements Resource {
     private final SearchService searchService;
 
     private final RepositoryManager repositoryManager;
@@ -80,8 +79,16 @@ public class RundeckMavenResource
             @QueryParam("a") String artifactId,
             @QueryParam("v") String version,
             @QueryParam("c") String classifier,
-            @QueryParam("p") String extension
+            @QueryParam("p") @DefaultValue("jar") String extension
     ) {
+
+
+        // default version
+        version = Optional.ofNullable(version).orElse(latestVersion(
+                repositoryName, groupId, artifactId, classifier, extension
+        ));
+
+        // valid params
         if (isBlank(repositoryName) || isBlank(groupId) || isBlank(artifactId) || isBlank(version)) {
             return NOT_FOUND;
         }
@@ -104,24 +111,11 @@ public class RundeckMavenResource
             return commitAndReturn(NOT_FOUND, tx);
         }
 
-        if ("LATEST".equals(version)) {
-            List<RundeckXO> latestVersion = version(1, repositoryName, groupId, artifactId, classifier, extension);
-            if (latestVersion.isEmpty()) {
-                return commitAndReturn(NOT_FOUND, tx);
-            }
-            
-            version = latestVersion.get(0).getValue();
-        }
-
-        if (isBlank(extension)) {
-            extension = "jar";
-        }
-
-        if (!isBlank(classifier)) {
-            classifier = "-" + classifier;
-        }
-
-        String path = groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + classifier + "." + extension;
+        String fileName = artifactId + "-" + version + (isBlank(classifier) ? "" : ("-" + classifier)) + "." + extension;
+        String path = groupId.replace(".", "/") +
+                "/" + artifactId +
+                "/" + version +
+                "/" + fileName;
         Asset asset = tx.findAssetWithProperty("name", path, bucket);
         log.debug("rundeck download asset: {}", asset);
         if (null == asset) {
@@ -132,7 +126,7 @@ public class RundeckMavenResource
         Blob blob = tx.requireBlob(asset.requireBlobRef());
         Response.ResponseBuilder ok = Response.ok(blob.getInputStream());
         ok.header("Content-Type", blob.getHeaders().get("BlobStore.content-type"));
-        ok.header("Content-Disposition", "attachment;filename=\"" + path.substring(path.lastIndexOf("/")) + "\"");
+        ok.header("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
         return commitAndReturn(ok.build(), tx);
     }
 
@@ -181,6 +175,14 @@ public class RundeckMavenResource
                 .collect(Collectors.toList());
     }
 
+    private String latestVersion(String repositoryName, String groupId, String artifactId, String classifier, String extension) {
+        List<RundeckXO> latestVersion = version(1, repositoryName, groupId, artifactId, classifier, extension);
+        if (!latestVersion.isEmpty()) {
+            return latestVersion.get(0).getValue();
+        }
+        return null;
+    }
+
     private RundeckXO his2RundeckXO(SearchHit hit) {
         String version = (String) hit.getSource().get("version");
 
@@ -188,7 +190,7 @@ public class RundeckMavenResource
         Map<String, Object> attributes = (Map<String, Object>) assets.get(0).get("attributes");
         Map<String, Object> content = (Map<String, Object>) attributes.get("content");
         String lastModifiedTime = "null";
-        if (content != null && content.containsKey("last_modified")){
+        if (content != null && content.containsKey("last_modified")) {
             Long lastModified = (Long) content.get("last_modified");
             lastModifiedTime = DateUtils.formatDate(new Date(lastModified), "yyyy-MM-dd HH:mm:ss");
         }
@@ -202,4 +204,5 @@ public class RundeckMavenResource
         }
         return response;
     }
+
 }
