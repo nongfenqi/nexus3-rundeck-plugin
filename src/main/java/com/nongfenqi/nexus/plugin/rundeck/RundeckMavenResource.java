@@ -106,18 +106,18 @@ public class RundeckMavenResource
 
         if ("LATEST".equals(version)) {
             List<RundeckXO> latestVersion = version(1, repositoryName, groupId, artifactId, classifier, extension);
-            if(latestVersion.isEmpty()){
-                return NOT_FOUND;
-            } else {
-                version = latestVersion.get(0).getValue();
+            if (latestVersion.isEmpty()) {
+                return commitAndReturn(NOT_FOUND, tx);
             }
+            
+            version = latestVersion.get(0).getValue();
         }
 
-        if(isBlank(extension)){
+        if (isBlank(extension)) {
             extension = "jar";
         }
 
-        if(!isBlank(classifier)){
+        if (!isBlank(classifier)) {
             classifier = "-" + classifier;
         }
 
