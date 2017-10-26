@@ -1,18 +1,21 @@
-# Nexus3 Rundeck plugin
+Nexus3 Rundeck plugin
+=====================
 
-<https://github.com/nongfenqi/nexus3-rundeck-plugin>
+https://github.com/nongfenqi/nexus3-rundeck-plugin
 
-## How to install
+How to install
+--------------
 
+-	add file: `NEXUS_HOME/nexus/system/com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar`
 
-* add file: `NEXUS_HOME/nexus/system/com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar`
+-	`NEXUS_HOME/nexus/etc/karaf/profile.cfg` append config `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version} = mvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version}`
 
-* `NEXUS_HOME/nexus/etc/karaf/profile.cfg` append config  `bundle.mvn\:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version} = mvn:com.nongfenqi.nexus.plugin/nexus3-rundeck-plugin/${version}`
-* `NEXUS_HOME/nexus/etc/karaf/startup.properties ` append config `reference\:file\:com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar = 200`
+-	`NEXUS_HOME/nexus/etc/karaf/startup.properties` append config `reference\:file\:com/nongfenqi/nexus/plugin/${version}/nexus3-rundeck-plugin-${version}.jar = 200`
 
-* restart nexus3
+-	restart nexus3
 
-## Usage
+Usage
+-----
 
 If you installed and the bundle is activeed, like this.
 
@@ -28,28 +31,29 @@ Now you can add url options from the nexus3 to rundeck.
 
 The plugin provides the following new HTTP resources :
 
-- `http://NEXUS_HOST/service/siesta/rundeck/maven/options/version` : return a json array with the version of the matching artifacts.
-  Parameters (all optional) :
-  - `r` : repository ID to search in (null for searching in all indexed repositories)
-  - `g` : groupId of the artifacts to match
-  - `a` : artifactId of the artifacts to match
-  - `p` : packaging of the artifacts to match ('jar', 'war', etc)
-  - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
-  - `l` : limit - max number of results to return, default value is 10
+-	`http://NEXUS_HOST/service/siesta/rundeck/maven/options/version` : return a json array with the version of the matching artifacts. Parameters (all optional) :
 
-- `http://NEXUS_HOST/service/siesta/rundeck/maven/options/content` : return artifact stream
-  Parameters (all required) :
-  - `r` : repository ID to search in (null for searching in all indexed repositories)
-  - `g` : groupId of the artifacts to match
-  - `a` : artifactId of the artifacts to match
-  - `v` : artifact version, default value is latest version
-  - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
-  - `p` : packaging of the artifacts to match ('jar', 'war', etc), default value is jar
+	-	`r` : repository ID to search in (null for searching in all indexed repositories)
+	-	`g` : groupId of the artifacts to match
+	-	`a` : artifactId of the artifacts to match
+	-	`p` : packaging of the artifacts to match ('jar', 'war', etc)
+	-	`c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
+	-	`l` : limit - max number of results to return, default value is 10
 
+-	`http://NEXUS_HOST/service/siesta/rundeck/maven/options/content` : return artifact stream Parameters (all required) :
+
+	-	`r` : repository ID to search in (null for searching in all indexed repositories)
+	-	`g` : groupId of the artifacts to match
+	-	`a` : artifactId of the artifacts to match
+	-	`v` : artifact version, default value is latest version
+	-	`c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
+	-	`p` : packaging of the artifacts to match ('jar', 'war', etc), default value is jar
 
 Note that if you want to retrieve the artifact from your Rundeck script, you can use content api, example is:
 
-    wget "http://NEXUS_HOST/service/siesta/rundeck/maven/options/content?r=reponame&g=${option.groupId}&a=${option.artifactId}&v=${option.version}" --content-disposition
+```
+wget "http://NEXUS_HOST/service/siesta/rundeck/maven/options/content?r=reponame&g=${option.groupId}&a=${option.artifactId}&v=${option.version}" --content-disposition
+```
 
 ### Docker repository
 
@@ -59,30 +63,42 @@ Welcome to contribute
 
 Welcome to contribute
 
-
-## How to build
+How to build
+------------
 
 ### Standard build
 
-- Java 1.8
-- run "./gradlew jar"
+-	requires Java 1.8
+
+```
+    ./gradlew build
+```
+
+### Releasing
+
+We are using reckon[https://github.com/ajoberstar/reckon] to determine the version from git.
+
+```
+	echo 'Make a patch release'
+	./gradlew clean build release -Preckon.stage=final -Preckon.scope=patch
+```
 
 ### Using a Docker
 
 You can build the plugin easily using a Docker image. With this method is not needed to install a local Gradle environment.
 
-- docker run -it --rm --name nexus3-rundeck-plugin -v "$PWD":/tmp/nexus3-rundeck-plugin -w /tmp/nexus3-rundeck-plugin springyboing/docker-gradlew ./gradlew jar
+-	docker run -it --rm --name nexus3-rundeck-plugin -v "$PWD":/tmp/nexus3-rundeck-plugin -w /tmp/nexus3-rundeck-plugin springyboing/docker-gradlew ./gradlew jar
 
 This command run a build inside a Docker image (springyboing/docker-gradlew), with gradlew environment ready.
 
-## Run in Docker
+Run in Docker
+-------------
 
 The following script allows you to run a Docker with Nexus 3 with nexus3-rundeck-plugin installed.
 
--  chmod 700 run_docker.sh
-- ./run_docker.sh
+-	chmod 700 run_docker.sh
+-	./run_docker.sh
 
 Nexus 3 will be running on http://localhost:8081/
 
-The script build the plugin using a Docker image, as is explained in [Using a Docker](#using-a-docker) section.
-Using the compiled jar will build the Dockerfile and run a container with Nexus 3 with nexus3-rundeck-plugin installed.
+The script build the plugin using a Docker image, as is explained in [Using a Docker](#using-a-docker) section. Using the compiled jar will build the Dockerfile and run a container with Nexus 3 with nexus3-rundeck-plugin installed.
