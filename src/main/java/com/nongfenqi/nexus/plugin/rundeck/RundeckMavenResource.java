@@ -27,12 +27,14 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.group.GroupFacet;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.search.SearchService;
 import org.sonatype.nexus.repository.storage.Asset;
 import org.sonatype.nexus.repository.storage.Bucket;
 import org.sonatype.nexus.repository.storage.StorageFacet;
 import org.sonatype.nexus.repository.storage.StorageTx;
+import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.rest.Resource;
 
 import javax.inject.Inject;
@@ -45,8 +47,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
 
 @Named
@@ -77,57 +78,46 @@ public class RundeckMavenResource
             @QueryParam("r") String repositoryName,
             @QueryParam("g") String groupId,
             @QueryParam("a") String artifactId,
-            @QueryParam("v") String version,
-            @QueryParam("c") String classifier,
-            @QueryParam("p") @DefaultValue("jar") String extension
+            @QueryParam("v") String version
     ) {
-
-
-        // default version
-        version = Optional.ofNullable(version).orElse(latestVersion(
-                repositoryName, groupId, artifactId, classifier, extension
-        ));
-
-        // valid params
         if (isBlank(repositoryName) || isBlank(groupId) || isBlank(artifactId) || isBlank(version)) {
             return NOT_FOUND;
         }
 
-        Repository repository = repositoryManager.get(repositoryName);
-        if (null == repository || !repository.getFormat().getValue().equals("maven2")) {
-            return NOT_FOUND;
+        List<Repository> repositories = getRepositories(repositoryName);
+
+        for (Repository repository : repositories) {
+
+            StorageFacet facet = repository.facet(StorageFacet.class);
+            Supplier<StorageTx> storageTxSupplier = facet.txSupplier();
+
+            log.debug("rundeck download repository: {}", repository);
+            final StorageTx tx = storageTxSupplier.get();
+            tx.begin();
+            Bucket bucket = tx.findBucket(repository);
+            log.debug("rundeck download bucket: {}", bucket);
+
+            if (null == bucket) {
+                return commitAndReturn(NOT_FOUND, tx);
+            }
+
+            String path = groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + ".jar";
+            Asset asset = tx.findAssetWithProperty("name", path, bucket);
+            log.debug("rundeck download asset: {}", asset);
+            if (null == asset) {
+                return commitAndReturn(NOT_FOUND, tx);
+            }
+            asset.markAsDownloaded();
+            tx.saveAsset(asset);
+            Blob blob = tx.requireBlob(asset.requireBlobRef());
+
+            Response.ResponseBuilder ok = Response.ok(blob.getInputStream());
+            ok.header("Content-Type", blob.getHeaders().get("BlobStore.content-type"));
+            ok.header("Content-Disposition", "attachment;filename=\"" + path.substring(path.lastIndexOf("/")) + "\"");
+            return commitAndReturn(ok.build(), tx);
         }
+        return NOT_FOUND;
 
-        StorageFacet facet = repository.facet(StorageFacet.class);
-        Supplier<StorageTx> storageTxSupplier = facet.txSupplier();
-
-        log.debug("rundeck download repository: {}", repository);
-        final StorageTx tx = storageTxSupplier.get();
-        tx.begin();
-        Bucket bucket = tx.findBucket(repository);
-        log.debug("rundeck download bucket: {}", bucket);
-
-        if (null == bucket) {
-            return commitAndReturn(NOT_FOUND, tx);
-        }
-
-        String fileName = artifactId + "-" + version + (isBlank(classifier) ? "" : ("-" + classifier)) + "." + extension;
-        String path = groupId.replace(".", "/") +
-                "/" + artifactId +
-                "/" + version +
-                "/" + fileName;
-        Asset asset = tx.findAssetWithProperty("name", path, bucket);
-        log.debug("rundeck download asset: {}", asset);
-        if (null == asset) {
-            return commitAndReturn(NOT_FOUND, tx);
-        }
-        asset.markAsDownloaded();
-        tx.saveAsset(asset);
-        Blob blob = tx.requireBlob(asset.requireBlobRef());
-        Response.ResponseBuilder ok = Response.ok(blob.getInputStream());
-        ok.header("Content-Type", blob.getHeaders().get("BlobStore.content-type"));
-        ok.header("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
-        return commitAndReturn(ok.build(), tx);
     }
 
     @GET
@@ -135,21 +125,27 @@ public class RundeckMavenResource
     @Produces(APPLICATION_JSON)
     public List<RundeckXO> version(
             @DefaultValue("10") @QueryParam("l") int limit,
-            @QueryParam("r") String repository,
+            @QueryParam("r") String repositoryName,
             @QueryParam("g") String groupId,
             @QueryParam("a") String artifactId,
             @QueryParam("c") String classifier,
             @QueryParam("p") String extension
     ) {
 
-        log.debug("param value, repository: {}, limit: {}, groupId: {}, artifactId: {}, classifier: {}, extension: {}", repository, limit, groupId, artifactId, classifier, extension);
+        log.debug("param value, repository: {}, limit: {}, groupId: {}, artifactId: {}, classifier: {}, extension: {}", repositoryName, limit, groupId, artifactId, classifier, extension);
+
+        List<Repository> repositories = getRepositories(repositoryName);
+        if (repositories.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        }
 
         BoolQueryBuilder query = boolQuery();
         query.filter(termQuery("format", "maven2"));
 
-        if (!isBlank(repository)) {
-            query.filter(termQuery("repository_name", repository));
+        for (Repository repository : repositories) {
+            query.should(matchPhraseQuery("repository_name", repository.getName()));
         }
+
         if (!isBlank(groupId)) {
             query.filter(termQuery("attributes.maven2.groupId", groupId));
         }
@@ -175,12 +171,18 @@ public class RundeckMavenResource
                 .collect(Collectors.toList());
     }
 
-    private String latestVersion(String repositoryName, String groupId, String artifactId, String classifier, String extension) {
-        List<RundeckXO> latestVersion = version(1, repositoryName, groupId, artifactId, classifier, extension);
-        if (!latestVersion.isEmpty()) {
-            return latestVersion.get(0).getValue();
+
+    private List<Repository> getRepositories(String repositoryName) {
+        Repository repository = repositoryManager.get(repositoryName);
+        if (null == repository || !repository.getFormat().getValue().equals("maven2")) {
+            return Collections.EMPTY_LIST;
         }
-        return null;
+        if (repository.getType() instanceof GroupType) {
+            GroupFacet facet = repository.facet(GroupFacet.class);
+            return facet.leafMembers();
+        }
+
+        return Collections.singletonList(repository);
     }
 
     private RundeckXO his2RundeckXO(SearchHit hit) {
@@ -189,11 +191,9 @@ public class RundeckMavenResource
         List<Map<String, Object>> assets = (List<Map<String, Object>>) hit.getSource().get("assets");
         Map<String, Object> attributes = (Map<String, Object>) assets.get(0).get("attributes");
         Map<String, Object> content = (Map<String, Object>) attributes.get("content");
-        String lastModifiedTime = "null";
-        if (content != null && content.containsKey("last_modified")) {
-            Long lastModified = (Long) content.get("last_modified");
-            lastModifiedTime = DateUtils.formatDate(new Date(lastModified), "yyyy-MM-dd HH:mm:ss");
-        }
+        long lastModified = (long) content.get("last_modified");
+
+        String lastModifiedTime = DateUtils.formatDate(new Date(lastModified), "yyyy-MM-dd HH:mm:ss");
 
         return RundeckXO.builder().name(version + " (" + lastModifiedTime + ")").value(version).build();
     }
@@ -204,5 +204,4 @@ public class RundeckMavenResource
         }
         return response;
     }
-
 }
