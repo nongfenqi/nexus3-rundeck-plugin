@@ -15,11 +15,15 @@ repositories {
     mavenCentral()
 }
 
+ext {
+  nexusVersion = '3.6.0-02'
+}
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compileOnly group: 'org.sonatype.nexus', name: 'nexus-plugin-api', version: '3.5.0-02'
-    compileOnly group: 'org.sonatype.nexus', name: 'nexus-repository', version: '3.5.0-02'
-    compileOnly group: 'org.sonatype.nexus', name: 'nexus-rest', version: '3.5.0-02'
+    compileOnly group: 'org.sonatype.nexus', name: 'nexus-plugin-api', version: nexusVersion
+    compileOnly group: 'org.sonatype.nexus', name: 'nexus-repository', version:  nexusVersion
+    compileOnly group: 'org.sonatype.nexus', name: 'nexus-rest', version:  nexusVersion
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.18'
 }
 
