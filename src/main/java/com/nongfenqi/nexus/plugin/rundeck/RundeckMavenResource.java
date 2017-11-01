@@ -18,6 +18,8 @@
 package com.nongfenqi.nexus.plugin.rundeck;
 
 import com.google.common.base.Supplier;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.apache.http.client.utils.DateUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -40,28 +42,36 @@ import org.sonatype.nexus.rest.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
 
 @Named
 @Singleton
 @Path("/rundeck/maven/options")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RundeckMavenResource
         extends ComponentSupport
         implements Resource {
-    private final SearchService searchService;
-
-    private final RepositoryManager repositoryManager;
-
-    private static final Response NOT_FOUND = Response.status(404).build();
-
+    static final Response NOT_FOUND = Response.status(404).build();
+    final SearchService searchService;
+    final RepositoryManager repositoryManager;
 
     @Inject
     public RundeckMavenResource(
@@ -78,7 +88,9 @@ public class RundeckMavenResource
             @QueryParam("r") String repositoryName,
             @QueryParam("g") String groupId,
             @QueryParam("a") String artifactId,
-            @QueryParam("v") String version
+            @QueryParam("v") String version,
+            @QueryParam("c") String classifier,
+            @QueryParam("p") String extension
     ) {
         if (isBlank(repositoryName) || isBlank(groupId) || isBlank(artifactId) || isBlank(version)) {
             return NOT_FOUND;
@@ -101,7 +113,7 @@ public class RundeckMavenResource
                 return commitAndReturn(NOT_FOUND, tx);
             }
 
-            String path = groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + ".jar";
+            String path = artifactPath(groupId, artifactId, version, classifier, extension);
             Asset asset = tx.findAssetWithProperty("name", path, bucket);
             log.debug("rundeck download asset: {}", asset);
             if (null == asset) {
@@ -118,6 +130,13 @@ public class RundeckMavenResource
         }
         return NOT_FOUND;
 
+    }
+
+    String artifactPath(String groupId, String artifactId, String version, String classifier, String extension) {
+        String c = classifier != null ? "-" + classifier : "";
+        String e = extension != null ? extension : ".jar";
+        return groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId +
+                "-" + version + c + e;
     }
 
     @GET
