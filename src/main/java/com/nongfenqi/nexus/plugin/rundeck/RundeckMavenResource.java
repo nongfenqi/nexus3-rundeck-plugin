@@ -110,7 +110,7 @@ public class RundeckMavenResource
             log.debug("rundeck download bucket: {}", bucket);
 
             if (null == bucket) {
-                return commitAndReturn(NOT_FOUND, tx);
+                continue;
             }
 
             String path = artifactPath(groupId, artifactId, version, classifier, extension);
