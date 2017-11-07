@@ -84,6 +84,9 @@ public class RundeckMavenResource
 
 
         // default version
+        if ("LATEST".equals(version)) {
+            version = null;
+        }
         version = Optional.ofNullable(version).orElse(latestVersion(
                 repositoryName, groupId, artifactId, classifier, extension
         ));
