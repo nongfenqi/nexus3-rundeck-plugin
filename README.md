@@ -50,7 +50,7 @@ Note that if you want to retrieve the artifact from your Rundeck script, you can
 
 ### Docker repository
 
-Welcome to contribute
+https://hub.docker.com/r/chenlmdocker/docker-nexus3/
 
 ### Npm repository
 
