@@ -167,7 +167,7 @@ public class RundeckMavenResource
         }
 
         log.debug("rundeck maven version query: {}", query);
-        SearchResponse result = searchService.search(
+        SearchResponse result = searchService.searchUnrestricted(
                 query,
                 Collections.singletonList(new FieldSortBuilder("assets.attributes.content.last_modified").order(SortOrder.DESC)),
                 0,
