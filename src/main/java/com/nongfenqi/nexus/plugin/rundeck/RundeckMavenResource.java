@@ -114,11 +114,13 @@ public class RundeckMavenResource
             return commitAndReturn(NOT_FOUND, tx);
         }
 
+        String folderVersion = version.replaceAll("-\\d{8}\\.\\d{6}\\-\\d+", "-SNAPSHOT");
         String fileName = artifactId + "-" + version + (isBlank(classifier) ? "" : ("-" + classifier)) + "." + extension;
         String path = groupId.replace(".", "/") +
                 "/" + artifactId +
-                "/" + version +
+                "/" + folderVersion +
                 "/" + fileName;
+
         Asset asset = tx.findAssetWithProperty("name", path, bucket);
         log.debug("rundeck download asset: {}", asset);
         if (null == asset) {
