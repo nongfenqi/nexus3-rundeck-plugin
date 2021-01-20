@@ -17,7 +17,6 @@
  */
 package com.nongfenqi.nexus.plugin.rundeck;
 
-import com.google.common.base.Supplier;
 import org.apache.http.client.utils.DateUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -50,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
