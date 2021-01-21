@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 黑牛
+ * Copyright 2017
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -17,7 +17,6 @@
  */
 package com.nongfenqi.nexus.plugin.rundeck;
 
-import com.google.common.base.Supplier;
 import org.apache.http.client.utils.DateUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -38,9 +37,19 @@ import org.sonatype.nexus.rest.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -114,11 +123,13 @@ public class RundeckMavenResource
             return commitAndReturn(NOT_FOUND, tx);
         }
 
+        String folderVersion = version.replaceAll("-\\d{8}\\.\\d{6}\\-\\d+", "-SNAPSHOT");
         String fileName = artifactId + "-" + version + (isBlank(classifier) ? "" : ("-" + classifier)) + "." + extension;
         String path = groupId.replace(".", "/") +
                 "/" + artifactId +
-                "/" + version +
+                "/" + folderVersion +
                 "/" + fileName;
+
         Asset asset = tx.findAssetWithProperty("name", path, bucket);
         log.debug("rundeck download asset: {}", asset);
         if (null == asset) {
