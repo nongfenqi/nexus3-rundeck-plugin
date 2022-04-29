@@ -18,16 +18,11 @@
 package com.nongfenqi.nexus.plugin.rundeck;
 
 import org.apache.http.client.utils.DateUtils;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import org.sonatype.nexus.repository.search.*;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
-import org.sonatype.nexus.repository.search.SearchService;
 import org.sonatype.nexus.repository.storage.Asset;
 import org.sonatype.nexus.repository.storage.Bucket;
 import org.sonatype.nexus.repository.storage.StorageFacet;
@@ -43,8 +38,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +47,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
 
 @Named
@@ -158,34 +149,36 @@ public class RundeckMavenResource
 
         log.debug("param value, repository: {}, limit: {}, groupId: {}, artifactId: {}, classifier: {}, extension: {}", repository, limit, groupId, artifactId, classifier, extension);
 
-        BoolQueryBuilder query = boolQuery();
-        query.filter(termQuery("format", "maven2"));
+        SearchRequest.Builder searchRequestBuilder = SearchRequest.builder();
+        searchRequestBuilder.searchFilter("format", "maven2");
 
         if (!isBlank(repository)) {
-            query.filter(termQuery("repository_name", repository));
+            searchRequestBuilder.searchFilter("repository_name", repository);
         }
         if (!isBlank(groupId)) {
-            query.filter(termQuery("attributes.maven2.groupId", groupId));
+            searchRequestBuilder.searchFilter("attributes.maven2.groupId", groupId);
         }
         if (!isBlank(artifactId)) {
-            query.filter(termQuery("attributes.maven2.artifactId", artifactId));
+            searchRequestBuilder.searchFilter("attributes.maven2.artifactId", artifactId);
         }
         if (!isBlank(classifier)) {
-            query.filter(termQuery("assets.attributes.maven2.classifier", classifier));
+            searchRequestBuilder.searchFilter("assets.attributes.maven2.classifier", classifier);
         }
         if (!isBlank(extension)) {
-            query.filter(termQuery("assets.attributes.maven2.extension", extension));
+            searchRequestBuilder.searchFilter("assets.attributes.maven2.extension", extension);
         }
 
-        log.debug("rundeck maven version query: {}", query);
-        SearchResponse result = searchService.searchUnrestricted(
-                query,
-                Collections.singletonList(new FieldSortBuilder("assets.attributes.content.last_modified").order(SortOrder.DESC)),
-                0,
-                limit
-        );
-        return Arrays.stream(result.getHits().hits())
-                .map(this::his2RundeckXO)
+        searchRequestBuilder.offset(0)
+                .limit(limit)
+                .sortField("assets.attributes.content.last_modified")
+                .sortDirection(SortDirection.DESC);
+
+        SearchRequest searchRequest = searchRequestBuilder.build();
+        log.debug("rundeck maven version query: {}", searchRequest);
+
+        SearchResponse result = searchService.search(searchRequest);
+        return result.getSearchResults().stream()
+                .map(this::searchResults2RundeckXO)
                 .collect(Collectors.toList());
     }
 
@@ -197,11 +190,10 @@ public class RundeckMavenResource
         return null;
     }
 
-    private RundeckXO his2RundeckXO(SearchHit hit) {
-        String version = (String) hit.getSource().get("version");
-
-        List<Map<String, Object>> assets = (List<Map<String, Object>>) hit.getSource().get("assets");
-        Map<String, Object> attributes = (Map<String, Object>) assets.get(0).get("attributes");
+    private RundeckXO searchResults2RundeckXO(ComponentSearchResult componentSearchResult) {
+        String version = componentSearchResult.getVersion();
+        List<AssetSearchResult> assets = componentSearchResult.getAssets();
+        Map<String, Object> attributes = assets.get(0).getAttributes();
         Map<String, Object> content = (Map<String, Object>) attributes.get("content");
         String lastModifiedTime = "null";
         if (content != null && content.containsKey("last_modified")) {
