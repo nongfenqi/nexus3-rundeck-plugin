@@ -161,9 +161,10 @@ public class RundeckMavenResource
         if (!isBlank(artifactId)) {
             searchRequestBuilder.searchFilter("attributes.maven2.artifactId", artifactId);
         }
-        if (!isBlank(classifier)) {
-            searchRequestBuilder.searchFilter("assets.attributes.maven2.classifier", classifier);
-        }
+
+        classifier = !isBlank(classifier) ? classifier : "";
+        searchRequestBuilder.searchFilter("assets.attributes.maven2.classifier", classifier);
+
         if (!isBlank(extension)) {
             searchRequestBuilder.searchFilter("assets.attributes.maven2.extension", extension);
         }
