@@ -178,7 +178,7 @@ public class RundeckMavenResource
 
         SearchResponse result = searchService.search(searchRequest);
         return result.getSearchResults().stream()
-                .map(this::searchResults2RundeckXOArtifact)
+                .map(this::searchResults2RundeckXOArtifact).distinct()
                 .collect(Collectors.toList());
     }
 
