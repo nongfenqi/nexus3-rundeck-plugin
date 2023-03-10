@@ -170,8 +170,8 @@ public class RundeckMavenResource
 
         searchRequestBuilder.offset(0)
                 .limit(limit)
-                .sortField("assets.attributes.content.last_modified")
-                .sortDirection(SortDirection.DESC);
+                .sortField("assets.attributes.maven2.artifactId")
+                .sortDirection(SortDirection.ASC);
 
         SearchRequest searchRequest = searchRequestBuilder.build();
         log.debug("rundeck maven version query: {}", searchRequest);
