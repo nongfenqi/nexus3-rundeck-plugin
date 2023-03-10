@@ -139,7 +139,7 @@ public class RundeckMavenResource
     @Path("artifactId")
     @Produces(APPLICATION_JSON)
     public List<String> artifactId(
-            @DefaultValue("50") @QueryParam("l") int limit,
+            @DefaultValue("10000") @QueryParam("l") int limit,
             @QueryParam("r") String repository,
             @QueryParam("g") String groupId,
             @QueryParam("v") String version,
