@@ -136,6 +136,53 @@ public class RundeckMavenResource
     }
 
     @GET
+    @Path("artifactId")
+    @Produces(APPLICATION_JSON)
+    public List<String> artifactId(
+            @DefaultValue("50") @QueryParam("l") int limit,
+            @QueryParam("r") String repository,
+            @QueryParam("g") String groupId,
+            @QueryParam("v") String version,
+            @QueryParam("c") String classifier,
+            @QueryParam("p") String extension
+    ) {
+        log.debug("param value, limit: {}, repository: {}, groupId: {}, version: {}, classifier: {}, extension: {}", limit, repository, groupId, version, classifier, extension);
+
+        SearchRequest.Builder searchRequestBuilder = SearchRequest.builder();
+        searchRequestBuilder.searchFilter("format", "maven2");
+
+        if (!isBlank(repository)) {
+            searchRequestBuilder.searchFilter("repository_name", repository);
+        }
+        if (!isBlank(groupId)) {
+            searchRequestBuilder.searchFilter("attributes.maven2.groupId", groupId);
+        }
+        if (!isBlank(version)) {
+            searchRequestBuilder.searchFilter("attributes.maven2.version", version);
+        }
+
+        classifier = !isBlank(classifier) ? classifier : "";
+        searchRequestBuilder.searchFilter("assets.attributes.maven2.classifier", classifier);
+
+        if (!isBlank(extension)) {
+            searchRequestBuilder.searchFilter("assets.attributes.maven2.extension", extension);
+        }
+
+        searchRequestBuilder.offset(0)
+                .limit(limit)
+                .sortField("assets.attributes.content.last_modified")
+                .sortDirection(SortDirection.DESC);
+
+        SearchRequest searchRequest = searchRequestBuilder.build();
+        log.debug("rundeck maven version query: {}", searchRequest);
+
+        SearchResponse result = searchService.search(searchRequest);
+        return result.getSearchResults().stream()
+                .map(this::searchResults2RundeckXOArtifact)
+                .collect(Collectors.toList());
+    }
+
+    @GET
     @Path("version")
     @Produces(APPLICATION_JSON)
     public List<RundeckXO> version(
@@ -189,6 +236,19 @@ public class RundeckMavenResource
             return latestVersion.get(0).getValue();
         }
         return null;
+    }
+
+    private String searchResults2RundeckXOArtifact(ComponentSearchResult componentSearchResult) {
+        String artifactId = null;
+        List<AssetSearchResult> assets = componentSearchResult.getAssets();
+        Map<String, Object> attributes = assets.get(0).getAttributes();
+        Map<String, Object> content = (Map<String, Object>) attributes.get("maven2");
+        
+        if (content != null && content.containsKey("artifactId")) {
+            artifactId = (String) content.get("artifactId");
+        }
+
+        return artifactId;
     }
 
     private RundeckXO searchResults2RundeckXO(ComponentSearchResult componentSearchResult) {

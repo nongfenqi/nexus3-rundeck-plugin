@@ -28,7 +28,16 @@ Now you can add url options from the nexus3 to rundeck.
 
 The plugin provides the following new HTTP resources :
 
-- `http://NEXUS_HOST/service/siesta/rundeck/maven/options/version` : return a json array with the version of the matching artifacts.
+- `http://NEXUS_HOST/service/rest/rundeck/maven/options/artifactId` : return a json array with the artifacts of the matching group.
+  Parameters (all optional) :
+  - `r` : repository ID to search in (null for searching in all indexed repositories)
+  - `g` : groupId of the artifacts to match
+  - `v` : versions of the artifacts to match
+  - `p` : packaging of the artifacts to match ('jar', 'war', etc)
+  - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
+  - `l` : limit - max number of results to return, default value is 50
+
+- `http://NEXUS_HOST/service/rest/rundeck/maven/options/version` : return a json array with the version of the matching artifacts.
   Parameters (all optional) :
   - `r` : repository ID to search in (null for searching in all indexed repositories)
   - `g` : groupId of the artifacts to match
@@ -37,7 +46,7 @@ The plugin provides the following new HTTP resources :
   - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
   - `l` : limit - max number of results to return, default value is 10
 
-- `http://NEXUS_HOST/service/siesta/rundeck/maven/options/content` : return artifact stream
+- `http://NEXUS_HOST/service/rest/rundeck/maven/options/content` : return artifact stream
   Parameters (all required) :
   - `r` : repository ID to search in (null for searching in all indexed repositories)
   - `g` : groupId of the artifacts to match
