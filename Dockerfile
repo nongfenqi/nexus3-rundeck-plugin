@@ -3,14 +3,14 @@
 #COPY . .
 #RUN ./gradlew jar
 
-#FROM sonatype/nexus3:3.49.0
-FROM  klo2k/nexus3
+FROM sonatype/nexus3:3.60.0
+#FROM  klo2k/nexus3
 #docker build . -t nex --platform linux/arm64/v8
 #export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
 #docker run -v $PWD/nexus-data:/nexus-data -p 8081:8081 nex
 #Nexus 3 version to use
 ARG NEXUS_VERSION=3.49.0
-ARG RUNDECK_PLUGIN_VERSION=1.1.2
+ARG RUNDECK_PLUGIN_VERSION=1.1.3
 
 USER root
 
