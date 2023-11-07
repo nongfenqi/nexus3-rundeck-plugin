@@ -35,7 +35,7 @@ The plugin provides the following new HTTP resources :
   - `v` : versions of the artifacts to match
   - `p` : packaging of the artifacts to match ('jar', 'war', etc)
   - `c` : classifier of the artifacts to match ('sources', 'javadoc', etc)
-  - `l` : limit - max number of results to return, default value is 50
+  - `l` : limit - max number of results to return, default value is 10000
 
 - `http://NEXUS_HOST/service/rest/rundeck/maven/options/version` : return a json array with the version of the matching artifacts.
   Parameters (all optional) :

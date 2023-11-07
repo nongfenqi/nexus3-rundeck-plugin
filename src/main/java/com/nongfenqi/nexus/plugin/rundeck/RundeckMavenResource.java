@@ -139,7 +139,7 @@ public class RundeckMavenResource
     @Path("artifactId")
     @Produces(APPLICATION_JSON)
     public List<String> artifactId(
-            @DefaultValue("50") @QueryParam("l") int limit,
+            @DefaultValue("10000") @QueryParam("l") int limit,
             @QueryParam("r") String repository,
             @QueryParam("g") String groupId,
             @QueryParam("v") String version,
@@ -178,7 +178,7 @@ public class RundeckMavenResource
 
         SearchResponse result = searchService.search(searchRequest);
         return result.getSearchResults().stream()
-                .map(this::searchResults2RundeckXOArtifact)
+                .map(this::searchResults2RundeckXOArtifact).distinct()
                 .collect(Collectors.toList());
     }
 
@@ -218,7 +218,7 @@ public class RundeckMavenResource
 
         searchRequestBuilder.offset(0)
                 .limit(limit)
-                .sortField("assets.attributes.content.last_modified")
+                .sortField("assets.attributes.maven2.version")
                 .sortDirection(SortDirection.DESC);
 
         SearchRequest searchRequest = searchRequestBuilder.build();
